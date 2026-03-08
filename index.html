@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>探索你的本命上古神兽</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #fcfbfc;
+      --bg-gradient: linear-gradient(135deg, #f7f6f2 0%, #eef0eb 100%);
+      --text-main: #2b2b2b;
+      --text-muted: #7a7a7a;
+      --border-color: #dcd9d0;
+      --card-bg: #ffffff;
+      --sel-bg: #e6e8e3;
+      --bamboo-bg: #ecdcb3;
+      --bamboo-border: #c4a977;
+      --bamboo-text: #4a3821;
+      --font-serif: 'Noto Serif SC', 'Songti SC', 'STSong', serif;
+      --pinyin-font: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body, html {
+      margin: 0;
+      padding: 0;
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      font-family: var(--font-serif);
+      font-weight: 300;
+      letter-spacing: 0.05em;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-x: hidden;
+    }
+
+    #app {
+      width: 100%;
+      max-width: 600px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+      position: relative;
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--text-main);
+      color: var(--text-main);
+      font-family: var(--font-serif);
+      font-size: 1rem;
+      font-weight: 400;
+      padding: 14px 44px;
+      border-radius: 4px;
+      cursor: pointer;
+      letter-spacing: 0.1em;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      margin-top: 40px;
+      outline: none;
+    }
+    .btn-outline:hover {
+      background: var(--text-main);
+      color: #fff;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+    }
+
+    .home-title {
+      font-size: 2.2rem;
+      font-weight: 500;
+      margin-bottom: 24px;
+      letter-spacing: 0.15em;
+      text-align: center;
+      color: #1a1a1a;
+    }
+    .home-sub {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin-bottom: 60px;
+      letter-spacing: 0.1em;
+      text-align: center;
+      line-height: 1.8;
+    }
+
+    /* 摇签交互区 */
+    .divination-sub-title {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      margin-bottom: 40px;
+      letter-spacing: 0.15em;
+      text-align: center;
+    }
+    
+    .cylinder-container {
+      width: 120px;
+      height: 180px;
+      position: relative;
+      margin: 0 auto 30px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      cursor: pointer;
+    }
+
+    .cylinder-svg {
+      width: 100px;
+      height: 150px;
+      z-index: 2;
+    }
+
+    .sticks-svg {
+      position: absolute;
+      bottom: 20px;
+      z-index: 1;
+      width: 60px;
+      height: 160px;
+    }
+
+    @keyframes shake {
+      0% { transform: translate(1px, 1px) rotate(0deg); }
+      10% { transform: translate(-1px, -2px) rotate(-3deg); }
+      20% { transform: translate(-3px, 0px) rotate(3deg); }
+      30% { transform: translate(3px, 2px) rotate(0deg); }
+      40% { transform: translate(1px, -1px) rotate(3deg); }
+      50% { transform: translate(-1px, 2px) rotate(-3deg); }
+      60% { transform: translate(-3px, 1px) rotate(0deg); }
+      70% { transform: translate(3px, 1px) rotate(-3deg); }
+      80% { transform: translate(-1px, -1px) rotate(3deg); }
+      90% { transform: translate(1px, 2px) rotate(0deg); }
+      100% { transform: translate(1px, -2px) rotate(-3deg); }
+    }
+    .shaking {
+      animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) infinite;
+    }
+
+    .drawn-slip-container {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      animation: fadeInUp 1s ease forwards;
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .bamboo-slip {
+      width: 65px;
+      height: 240px;
+      background: var(--bamboo-bg);
+      border: 1px solid var(--bamboo-border);
+      border-radius: 4px;
+      box-shadow: 2px 5px 15px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      writing-mode: vertical-rl;
+      text-orientation: upright;
+      padding: 10px 0;
+      position: relative;
+    }
+    
+    .bamboo-slip::before {
+      content: '';
+      position: absolute;
+      top: 5px; bottom: 5px; left: 5px; right: 5px;
+      border: 1px solid rgba(196, 169, 119, 0.4);
+      border-radius: 2px;
+      pointer-events: none;
+    }
+
+    .slip-text-num {
+      font-size: 1.1rem;
+      font-weight: 500;
+      color: var(--bamboo-text);
+      letter-spacing: 0.2em;
+    }
+
+    .slip-text-grade {
+      font-size: 0.95rem;
+      color: #9e2a2b;
+      font-weight: 500;
+      margin-top: 15px;
+      border: 1.5px solid #9e2a2b;
+      padding: 4px 2px;
+      border-radius: 2px;
+    }
+
+    .lot-explanation {
+      font-size: 0.95rem;
+      color: #444;
+      line-height: 1.8;
+      text-align: center;
+      max-width: 85%;
+      margin: 30px auto 0;
+      letter-spacing: 0.05em;
+    }
+
+    .lot-desc-text {
+      color: var(--text-muted);
+      margin-top: 10px;
+      font-size: 0.9rem;
+    }
+
+    .continue-container {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 1s ease;
+      margin-top: 10px;
+      text-align: center;
+    }
+    .continue-container.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* 问答区 */
+    .quiz-container {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      margin-top: -5vh;
+      animation: fadeIn 0.8s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .page-num {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 50px;
+      letter-spacing: 0.25em;
+    }
+    .question-text {
+      font-size: 1.2rem;
+      font-weight: 500;
+      color: var(--text-main);
+      margin-bottom: 50px;
+      text-align: center;
+      line-height: 1.7;
+      width: 100%;
+    }
+    .options-list {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .option-item {
+      width: 100%;
+      padding: 20px 24px;
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 1rem;
+      color: var(--text-main);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      line-height: 1.6;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.01);
+    }
+    .option-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.04);
+      border-color: #c4c1b5;
+    }
+    .option-item:active {
+      transform: scale(0.99);
+    }
+    .option-item.selected {
+      background-color: var(--sel-bg);
+      border-color: var(--sel-bg);
+      box-shadow: none;
+      transform: scale(0.99);
+    }
+
+    /* 报告区 */
+    .report-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 60px 44px;
+      width: 100%;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.05);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      animation: fadeIn 1s ease;
+      position: relative;
+    }
+    .report-sub {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      letter-spacing: 0.15em;
+      margin-bottom: 25px;
+    }
+    
+    .report-title {
+      font-size: 2.8rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 4px;
+      letter-spacing: 0.15em;
+      text-align: center;
+    }
+
+    .beast-pinyin {
+      font-family: var(--pinyin-font);
+      font-size: 0.95rem;
+      color: #9e2a2b;
+      letter-spacing: 0.2em;
+      margin-bottom: 35px;
+      text-transform: lowercase;
+      opacity: 0.85;
+      border-bottom: 1px solid rgba(158, 42, 43, 0.2);
+      padding-bottom: 4px;
+    }
+
+    .report-lot {
+      font-size: 1rem;
+      color: var(--bamboo-text);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 40px;
+      background: var(--bamboo-bg);
+      padding: 8px 20px;
+      border-radius: 4px;
+      border: 1px solid var(--bamboo-border);
+    }
+    .divider {
+      width: 100%;
+      height: 1px;
+      background-color: var(--border-color);
+      margin-bottom: 40px;
+    }
+    .section-title {
+      width: 100%;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 16px;
+      letter-spacing: 0.05em;
+      border-left: 3px solid #666;
+      padding-left: 10px;
+    }
+    .section-content {
+      width: 100%;
+      font-size: 0.95rem;
+      color: #4a4a4a;
+      line-height: 2.1;
+      margin-bottom: 36px;
+      text-align: justify;
+    }
+
+    @media (max-width: 480px) {
+      .report-card { padding: 40px 24px; }
+      .option-item { padding: 16px 20px; font-size: 0.95rem; }
+      .home-title { font-size: 1.8rem; }
+      .report-title { font-size: 2.4rem; }
+      .lot-explanation { max-width: 95%; font-size: 0.9rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script>
+/* --- 关帝灵签 纯吉相/中平签库 --- */
+const guandiLotsData =[
+  "上上|巍巍独步向云间，玉殿清虚阔且闲。|前途广阔，诸事顺遂，正处于运势巅峰。",
+  "上吉|水木相生立大功，长风破浪正逢时。|风水相生，前途明朗，一切努力皆有回报。",
+  "中平|静处安身万事宜，何须妄动惹疑猜。|静守常理，不可妄动，维持现状酝酿力量。",
+  "大吉|龙门跃过化真龙，雷雨交加任我行。|突破瓶颈，迎来质变，是展露才华的绝佳时机。",
+  "中吉|一轮明月照清辉，万里无云四野开。|阴霾散去，内心澄明，适合按部就班推进计划。",
+  "上吉|枯木逢春再发华，一茎两朵现奇葩。|绝处逢生，转机已现，曾经的遗憾将得到弥补。",
+  "大吉|鲲鹏展翅九万里，扶摇直上九重天。|格局大开，宜向外拓展，不要被眼前的琐碎困住。",
+  "中平|平沙落雁少人知，水远山长且待时。|默默沉淀，静待花开，你的内力正变得深不可测。",
+  "上上|红日当空照万方，四海升平乐未央。|如日中天，能量极度充沛，能照亮一切阴暗角落。",
+  "中吉|求名求利两相宜，水到渠成自有期。|顺其自然，只要坚持耕耘，你想要的自会到来。",
+  "大吉|金鳞岂是池中物，一遇风云便化龙。|蛰伏已久，东风将至，准备迎接属于你的高光。",
+  "上吉|宝镜重磨复见光，光辉依旧照四方。|找回初衷，重拾信心，你的光环无法被掩盖。",
+  "中平|莫问前程路短长，但凭方寸任行藏。|不要过度担忧未来，活在当下，守住内心的准则。",
+  "大吉|春雷一震蛰龙起，万里祥云四海升。|一声雷鸣打破停滞，带着磅礴气势向前冲刺。",
+  "上吉|满面春风得意归，贵人相助步云梯。|人际融洽，所遇皆善，易得外界极大的助力。",
+  "中吉|半喜半忧事未全，且宜安分莫怨天。|有得有失是常态，保持平稳心态便是最强的守护。",
+  "上上|玉树琼枝长势新，百花齐放满园春。|生机勃勃，灵感迸发，是最适合创造与收获的时期。",
+  "中平|行藏由我亦由天，且守旧规自晏然。|谋事在人成事在天，尽力而为即可心安理得。",
+  "大吉|紫气东来万事通，福星高照运亨通。|气场全开，霉运退散，大胆去做你渴望的事。",
+  "上吉|乘风破浪去寻宝，直挂云帆济沧海。|带着无畏勇气去探索，你将获得丰厚的精神或物质财富。",
+  "中吉|小舟撑出柳阴来，顺水推船好快哉。|一切都在顺水推舟中进行，毫不费力，轻松愉悦。",
+  "上上|万丈高楼平地起，根基稳固直冲天。|基础已经打好，是时候构建你宏大的精神帝国了。",
+  "上吉|灵芝瑞草暗飘香，秀色葱茏映日光。|福泽深厚，内心丰盈，生活充满微小且确定的幸福。",
+  "大吉|祥风阵阵拂高台，瑞气盈门万事开。|时来运转，局势大好，敞开胸怀迎接未来的惊喜。"
+];
+
+let fullGuandiLots =[];
+for(let i=0; i<100; i++) {
+  let template = guandiLotsData[i % guandiLotsData.length].split("|");
+  fullGuandiLots.push({
+    num: i + 1,
+    grade: template[0],
+    poem: template[1],
+    desc: template[2]
+  });
+}
+
+// 沉浸式神话13道题
+const questions =[
+  { q: "如果你诞生于山海之间，你更可能栖居在？", o:["云层之上", "深山洞穴", "荒原与废墟", "静水之畔"] },
+  { q: "如果你的力量觉醒，它更像？", o:["掌控风雨", "撕裂大地", "迷惑心智", "守护秩序"] },
+  { q: "如果你的身体有一个最明显的特征，会是？", o:["灵动的翅翼", "獠牙或利爪", "奇异的双瞳", "坚硬的鳞甲"] },
+  { q: "如果时间是一种力量，你觉得它更像？", o:["循环不息的星辰", "悄然流逝的沙", "无形转向的风", "冷静运转的秩序"] },
+  { q: "若你守护一方山海，你更想守护？", o:["生灵万物的繁衍与安宁", "天地法则的稳定与运行", "不可外泄的古老秘密", "被封印的强大力量"] },
+  { q: "有人误闯你的领域，你第一反应是？", o:["潜伏不动，探其来意", "释放威压，使其止步", "显形盘问来意", "雷霆出击，将其逐出"] },
+  { q: "为你的家族选择一枚图腾，你会更倾向？", o:["永生古树之纹", "幽谷静花之纹", "日月星辰之纹", "深海流水之纹"] },
+  { q: "若你与世界交流，你更倾向？", o:["梦境相通", "气息感知", "意念传递", "身体本能触碰"] },
+  { q: "若情绪成为力量源泉，你更偏向？", o:["平静", "愤怒", "好奇", "快乐"] },
+  { q: "若最终归于一种状态，你更接近？", o:["自由而流动，不被形态限制", "坚守一处，成为稳定的存在", "以感知世界为本，而非改变世界", "在变化与秩序之间保持平衡"] },
+  { q: "若你听见世界的本源之声，它更可能是？", o:["风穿过山谷", "海浪起伏", "地脉深处的震动", "万物缓慢生长的呼吸"] },
+  { q: "若你拥有一种守护之物，你更可能选择？", o:["能引动风雨的羽饰", "刻有山川纹路的石印", "盛放微光的古盏", "流动银纹的水镜"] },
+  { q: "若你在山海世界中留下传说，你希望被记住为？", o:["自由穿行天地的游灵", "镇守一方山岳的古守者", "知晓秘密的隐世之灵", "平衡万物的调和之影"] }
+];
+
+// 70大上古核心生命 (加入严谨拼音标注)
+const animals =[
+  { name:"白泽", pinyin:"bái zé", origin:"古籍载其为通万物之情、晓天下万物状貌的神兽。", situation:"你正处在人生的一段迷雾之中，许多问题似乎没有明确答案。", trait:"代表逢凶化吉的智慧与清醒的洞察力，不轻易被表象迷惑。", guidance:"相信你的判断力，你的直觉和学识会带你走出困局，找到属于自己的方向。" },
+  { name:"九尾狐", pinyin:"jiǔ wěi hú", origin:"《南山经》载：青丘之山，有兽焉，其状如狐而九尾。本为祥瑞与多子多福之兆。", situation:"你正处于需要散发个人魅力、建立人际连接的活跃期。", trait:"象征着极高的情商、致命的吸引力与灵动的生命力。", guidance:"善用你的沟通天赋与柔性力量，不要畏惧展现自己的光芒。保持你的真诚与从容，机缘会在不经意间降临到你身边。" },
+  { name:"凤凰", pinyin:"fèng huáng", origin:"《南山经》载：有鸟焉，其状如鸡，五采而文，名曰凤皇。见则天下安宁。", situation:"你刚刚结束一段周期，内心渴望一种更高维度的升华。", trait:"代表着高洁的品格、不灭的意志与对完美的极致追求。", guidance:"莫与俗尘争长短，且向青云展翼，你生来便有高远之志，不必困于眼前纷扰，亦不必在意旁人闲言。只管心无旁骛、乘风而上，奔赴属于你的广阔天地。" },
+  { name:"麒麟", pinyin:"qí lín", origin:"古籍载其为仁兽，集狮头、鹿角，虎眼、麋身、龙鳞于一体。", situation:"你的内心正趋于平和，对周遭充满了一种宽厚的包容与大爱。", trait:"象征着仁慈、祥瑞与不群的威严。你拥有强大的力量却从不滥用。", guidance:"坚持你的底线与善良，你的存在本身就能给周围人带来安定感。" },
+  { name:"饕餮", pinyin:"tāo tiè", origin:"《北山经》载：其形状如羊身人面，其目在腋下，虎齿人爪，其音如婴儿。", situation:"你当下对某种事物有着极其强烈的渴望与探索欲。", trait:"代表着极致的欲望、无所顾忌的扩张力，以及对世界旺盛的探索欲与生命力。", guidance:"你的能量本就强大，关键在于让它有目标地释放。当野心与自律并行时，你往往能走得比别人更远。" },
+  { name:"穷奇", pinyin:"qióng qí", origin:"《西山经》载：邽山，其上有兽焉，其状如牛，猬毛，名曰穷奇，音如獆狗，是食人。", situation:"你内心有一股想要打破常规、反叛既有规则的冲动。", trait:"象征着狂放不羁、反叛精神与强大且有些危险的破坏力。", guidance:"以破为进，让这份不羁的力量，成为打破陈规的利刃，而非伤人伤己的锋芒。" },
+  { name:"梼杌", pinyin:"táo wù", origin:"上古四凶之一，《神异经》载其状如虎而犬毛，长两尺，人面，虎足，猪口牙。", situation:"你正死死咬住某个目标，处于一种极其固执且不听劝阻的状态。", trait:"象征着顽强的意志、不轻言退的执念，以及在困境中仍然向前的力量。", guidance:"你的坚持本身就是一种力量，它会带你穿越漫长的黑夜。只是偶尔停一停，分辨方向，你会走得更稳、更远。" },
+  { name:"混沌", pinyin:"hùn dùn", origin:"《庄子》等典籍中皆有涉猎，状如黄囊，赤如丹火，六足四翼，浑敦无面目。", situation:"你处于一种万物未分、迷茫却充满无限可能性的初始混沌状态。", trait:"象征着未被定义的原初力量、包容万物的广阔，以及一切尚未成形时的纯粹。", guidance:"不要急于给自己贴标签或下定义。在混沌中安静地沉潜，让可能性慢慢孕育。很多时候，真正的答案并非被创造，而是自然显现。" },
+  { name:"烛龙", pinyin:"zhú lóng", origin:"中国古代神话体系中掌管昼夜时序的神兽，传说其闭目则夜，睁眼则昼，掌控昼夜时序、光明与黑暗。", situation:"你的视野正在被抬升，开始以更宏观的方式凝视时间与变化。你不只关注当下，更试图看见更长远的轨迹。", trait:"象征对时间流动的感知力，以及在深邃黑暗中仍能保持清醒的洞察之力。光与影，在你眼中并非对立，而是同一条道路的两端。", guidance:"不必追逐外界的光明，守住内心的尺度，自能定黑白、辨时序，你即是自己的光。" },
+  { name:"帝江", pinyin:"dì jiāng", origin:"《西山经》载：有神鸟，其状如黄囊，赤如丹火，六足四翼，浑敦无面目，是识歌舞。", situation:"你正在享受一种无拘无束、不需要理智思考的纯粹快乐。", trait:"象征着原始的欢愉、对音乐与律动的本能热爱以及无忧无虑。", guidance:"放空头脑，让感受先于思考，跟随身体的直觉去跳舞、去歌唱，享受当下纯粹的生命律动。" },
+  { name:"毕方", pinyin:"bì fāng", origin:"《西山经》载：有鸟焉，其状如鹤，一足，赤文青质而白喙，名曰毕方。", situation:"你心中有一团火在燃烧，可能是一个急于昭告天下的预兆或警示。", trait:"代表着火的能量、警觉性与带来剧变或警告的先知特质。", guidance:"当火焰尚未燃起时，往往只有少数人能看见最初的火星。若你已经察觉，请相信那份预兆。那是独属于你的天赋。" },
+  { name:"重明鸟", pinyin:"chóng míng niǎo", origin:"古籍载其两目各有双瞳，能搏逐猛兽妖物。", situation:"你的双眼极度清明，正看穿周遭的谎言与虚妄。", trait:"象征着极致的洞察力、驱邪避凶的能力与绝对的光明磊落。", guidance:"相信你所看到的真相。不要被他人的掩饰所迷惑，你的眼光是极其精准的。" },
+  { name:"鲲鹏", pinyin:"kūn péng", origin:"《庄子·逍遥游》载：北冥有鱼，其名为鲲……化而为鸟，其名为鹏。", situation:"你正处于一场蜕变当中，准备跨入更广阔的天地。", trait:"代表着不可思议的体量、跨越边界的转化与超凡脱俗的境界。", guidance:"鲲之大，非浅水可容；鹏之高，非低空可及。眼前这一隅，对你而言，不过是暂栖之地，你的天地，自在风云之间。" },
+  { name:"夫诸", pinyin:"fū zhū", origin:"《中次三经》载：有兽焉，其状如白鹿而四角，名曰夫诸，见则其邑大水。", situation:"你正处于一种情绪的洪水期，感受力被放大，悲悯之情在心中泛滥。", trait:"象征着纯洁、极致的温柔与带来水之净化（或泛滥）的灵性。", guidance:"允许情绪在心中流动。水既能冲刷尘埃，也能滋养万物，在柔软与静意之间，你会找到属于自己的平静。" },
+  { name:"鹿蜀", pinyin:"lù shǔ", origin:"《南山经》载：杻阳之山，有兽焉，其状如马而白首，其文如虎而赤尾，其音如谣。", situation:"你渴望创造，或通过声音去触动与抚慰他人。", trait:"代表着生生不息的创造力、优美的表达以及带来子息繁盛的祥瑞。", guidance:"用你的声音、文字或创作去歌唱。你的表达如同流淌的歌谣，不仅抚慰他人，也让生命的繁盛与希望在你周围悄然生长。" },
+  { name:"蛊雕", pinyin:"gǔ diāo", origin:"《南山经》载：水有兽焉，名曰蛊雕，其状如雕而有角，其音如婴儿之音。", situation:"你往往习惯在观察中行动，保持一定的距离感，在确认方向之前不会轻易显露真实意图。", trait:"象征着隐秘的敏锐直觉、极强的判断力与在关键时刻一击而中的专注力量。", guidance:"真正的力量，往往生长在安静的角落。学会在暗处积蓄，审时度势，再在关键时刻果断出击，让智慧和克制成为你最锋利的武器。" },
+  { name:"狌狌", pinyin:"xīng xīng", origin:"《南山经》载：招摇之山，有兽焉，其状如禺而白耳，伏行人走，其名曰狌狌。", situation:"你习惯从过去的经历中寻找答案，善于在记忆中梳理路径，希望借助历史的经验来理解当下。", trait:"象征着深刻的记忆力、快速的反应能力，以及从过往中提取智慧的敏锐直觉。", guidance:"过去的经历是你的宝藏，但不必被它束缚。带着经验向前行走，让记忆成为你前进的力量，而非停留的理由。" },
+  { name:"乘黄", pinyin:"chéng huáng", origin:"古籍中的神马，其外形类狐背上有角，长有翅膀，具有神力，乘坐可寿二千岁。", situation:"你的生活节奏变慢，正在追求一种长期、稳固的生活方式。", trait:"象征着悠长的生命韧性、跨越时间的耐力，以及在缓慢流动中依然坚定前行的力量。", guidance:"不要追求短暂的爆发。你当前所做的事情，需要让时间成为你的盟友，许多答案，会在漫长的生长中自然显现。" },
+  { name:"驳", pinyin:"bó", origin:"《西山经》载：有兽焉，其名曰驳，状如白马，锯牙，食虎豹。", situation:"你正以一种无畏的姿态，准备迎战即将到来的困难与挑战。", trait:"象征着沉稳而强韧的勇气、在逆境中愈发清晰的意志，以及在压力之下仍能保持前行的力量。", guidance:"不要畏惧那些看似不可战胜的权威或强敌。你内心的力量远比你想象的更加强大。" },
+  { name:"狡", pinyin:"jiǎo", origin:"《西山经》载：玉山，有兽焉，其状如犬而豹文，其角如牛，其名曰狡。", situation:"你正处于能量充盈的状态，预示着你所处的环境即将迎来大丰收。", trait:"象征着旺盛的生命力、灵活的行动力，以及在流动变化中依然能够积累与丰收的力量。", guidance:"保持你的活力，大胆去播种和耕耘。这是一个适合收获与积累财富的绝佳时期。" },
+  { name:"狰", pinyin:"zhēng", origin:"《西山经》载：有兽焉，其状如赤豹，五尾一角，其音如击石，其名如狰。", situation:"你倾向于保持独立的精神空间，对喧嚣与复杂的人际关系保持一定距离，内心更重视真实与纯粹。", trait:"象征着孤高的自持、锋利而清醒的判断力，以及在静默中依然坚定的精神张力。", guidance:"无需刻意融入所有声音。你的表达自有锋芒，足以震慑那些庸俗的杂音。" },
+  { name:"獓狠", pinyin:"áo hěn", origin:"古籍载其为上古奇兽，状如牛，有四只角，其毛如披蓑衣。", situation:"你在面对外界时会本能地保持警惕，倾向于构筑稳固的边界，以保护内在的安全与秩序。", trait:"象征着深沉的防御本能、不可侵犯的精神疆界，以及在沉默中守护自我的坚韧力量。", guidance:"适度收起你的防备，厚重的蓑衣虽然能抵御风寒，但也阻挡了温暖的拥抱。" },
+  { name:"蠃鱼", pinyin:"luǒ yú", origin:"《西山经》载：蠃鱼，鱼身而鸟翼，音如鸳鸯，见则其邑大水。", situation:"你的思维方式不受既定边界约束，习惯在不同领域与概念之间寻找连接与可能性。", trait:"象征着跨界的智慧、自由穿行于多重结构之间的适应力，以及在变化中依然保持方向的能力。", guidance:"你的跨界思维是破局的关键。不要害怕引发思想的浪潮，让思想在流动中前行，许多方向，会在浪潮起落之间自然显现。" },
+  { name:"冉遗鱼", pinyin:"rǎn yí yú", origin:"《西山经》载：多冉遗之鱼，鱼身蛇首六足，食之使人不眯，可以御凶。", situation:"你希望摆脱纷扰与不安，在更平静的状态中，守护内心的安宁与清醒。", trait:"象征着驱散梦魇的守护力、清醒的头脑与抵御恐惧的能力。", guidance:"直面你的恐惧，它不过是纸老虎。真正的力量，在于你的内心足够清明，不再被恐惧左右。保持觉知，你将看清前行的方向。" },
+  { name:"鯥", pinyin:"lù", origin:"《南山经》载：有鱼焉，其状如牛，陵居，蛇尾有翼，其名曰鯥，冬死而夏生。", situation:"你正在经历人生的低谷或蛰伏期，默默等待下一个春天的复苏。", trait:"代表着极强的生命韧性、随遇而安的适应力，以及在循环中完成自我复苏的能力。", guidance:"蛰伏并非停滞，而是生命在悄然蓄力。耐心等待时序流转，属于你的春日终将到来。" },
+  { name:"鵸鵌", pinyin:"qí tú", origin:"《西山经》载：有鸟焉，其状如乌，三首六尾而善笑，名曰鵸鵌。", situation:"你可能同时面对多条线索或复杂局面，需要缓解压力并找出平衡之法。", trait:"象征着多维度的认知方式、持续流动的生命力，以及在变化中依然保持乐观轻盈之心。", guidance:"保持你乐观的天性。让思绪在不同方向间自然流动，带着希望前行，纷繁终会归于明朗。" },
+  { name:"比翼鸟", pinyin:"bǐ yì niǎo", origin:"《海外南经》载：比翼鸟在其东，其为鸟青、赤，两鸟比以翼。", situation:"你深深体会到团队合作或伴侣关系的重要性，在相互支持的连接中获得前行的力量。", trait:"象征着深厚的情感羁绊、彼此互补的生命形态，以及在连接中实现更高层次的飞行。", guidance:"不必强求完美的独立。真正的远行，往往始于心灵的相遇与彼此的托举。" },
+  { name:"青鸾", pinyin:"qīng luán", origin:"古籍载其为西王母的使者，常伴神仙，声音清脆，羽色华丽。", situation:"你倾向于保持内在的清雅与克制，可能正在等待或传递某个重要的讯息。", trait:"象征着神圣的使命感、高雅的审美以及连接远方与心灵的隐性力量。", guidance:"保持你内心的圣洁与高雅。你的表达与思想，往往会在不经意间对他人产生深远的影响。" },
+  { name:"鸑鷟", pinyin:"yuè zhuó", origin:"古籍载其为五凤之一，身为紫色，象征着坚贞不屈与忠诚。", situation:"你在面对选择与考验时，往往坚持内心的准则，绝不随波逐流。", trait:"代表着精神的高贵、对信念的坚贞与宁折不弯的傲骨。", guidance:"坚持你的原则，哪怕这会让你显得有些格格不入。你的坚定会为你赢得真正的尊重。" },
+  { name:"天狗", pinyin:"tiān gǒu", origin:"《西山经》载：阴山，有兽焉，其状如狸而白首，名曰天狗，可以御凶。", situation:"你在面对不公或危险时，往往会选择果断介入，以行动守护心中的秩序与正义。", trait:"象征着迅疾而坚定的守护力量、震慑阴影的决断气质，以及在关键时刻降临的锋芒。", guidance:"当不公与阴影出现时，不必回避你的锋芒。真正的守护，往往来自清醒而坚定的发声。" },
+  { name:"狸力", pinyin:"lí lì", origin:"《南山经》载：柜山，有兽焉，其状如豚，有距，其名曰狸力。", situation:"你倾向于以踏实的方式推进目标，愿意在基础性工作与长期积累中沉淀价值。", trait:"代表着卓越的行动力、深厚的耐力与任劳任怨的实干精神。", guidance:"不要在乎外表的泥土，你正在构筑坚实的基底。未来的摩天大楼，离不开你此刻的挖掘。" },
+  { name:"举父", pinyin:"jǔ fù", origin:"《西山经》载，崇吾之山有兽名举父，形似猿而善臂击，传说长于远攻与机巧之术。", situation:"你善于在复杂局势中寻找最合适的切入方式，更倾向于以灵活而冷静的姿态应对挑战。", trait:"象征着敏捷的行动能力、策略性的智慧，以及在变化中保持从容的进退节奏。", guidance:"发挥你的灵活性。遇到困难时，寻找最恰当的方向，以灵巧为刃，用策略性的智慧解决。" },
+  { name:"巴蛇", pinyin:"bā shé", origin:"《海内南经》载，巴蛇体形巨大，传说能吞食巨象，历经三年方能消化其骨。", situation:"你正面对一个宏大而深远的目标，意志正向着更广阔的可能延展。", trait:"代表着吞天食地的野心、坚定的目标感以及在时间中转化力量的坚韧本性。", guidance:"高远的志向本身并非负担，让时间成为力量的延展，在沉静的积累中，宏大的愿景，终将被缓慢而坚定地实现。" },
+  { name:"肥遗", pinyin:"féi yí", origin:"《西山经》载：有蛇焉，名曰肥遗，六足四翼，见则天下大旱。", situation:"你的能量过于炽热，可能在不经意间改变周围的气场。", trait:"象征着炽烈而醒目的表达方式，以及难以被忽视的辐射性影响。", guidance:"真正强大的能量，往往懂得在必要的瞬间点燃世界。掌握润物细无声的沟通，不要让你的急躁烤干了周围的善意。" },
+  { name:"鸣蛇", pinyin:"míng shé", origin:"《中次二经》载，形似蛇而生四翼，传说其声如磬，现身常预示气象与环境的变化。", situation:"你拥有敏锐的感知力，往往能够在沉默中察觉潜在的变化，并试图推动事情的发展。", trait:"象征着穿透停滞的表达力量、清晰而有张力的判断，以及在关键时刻做出改变的气魄。", guidance:"当沉寂需要被打破时，不必犹豫，你的发声至关重要。用你清晰的逻辑去敲响警钟，唤醒那些沉睡的人。" },
+  { name:"化蛇", pinyin:"huà shé", origin:"《中次二经》载：其状如人面而豺身，鸟翼而蛇行，其音如叱呼，见则其邑大水。", situation:"你正处于一个微妙的转折期，内心的情绪在悄然涌动，你在思考如何在变化中保持自身的节奏。", trait:"象征着隐藏自己、灵活应对变化，同时在暗处积蓄力量，随时准备迎接挑战。", guidance:"不必刻意压抑情绪的起伏。让内在的感受自然流动，在释放与平衡之间，生命会为你找到新的路径。" },
+  { name:"陆吾", pinyin:"lù wú", origin:"中国古代神话传说中的昆仑山神明,《西山经》载：神陆吾司之。其神状虎身而九尾，人面而虎爪。", situation:"你正站在一个极其关键的岗位上，担任着守护者或管理者的重任。", trait:"代表着神圣的守卫、极高的责任感、威严的管理能力以及平衡的智慧。", guidance:"守住你的边界与原则，在平和与坚定中履行责任。无需刻意展现威严，沉稳本身就是力量。你的选择与态度，往往能让周围充满安定感。" },
+  { name:"开明兽", pinyin:"kāi míng shòu", origin:"《海内西经》载：开明兽身大类虎而九首，皆人面，东向立昆仑上。", situation:"你需要眼观六路耳听八方，每一个细节都可能影响最终判断。", trait:"象征全方位的视野、绝对清醒与高维洞察能力。", guidance:"不要被局部所牵引，尝试从更开阔的视角审视整体。在变化与信息的流动中保持清醒，真正的洞察来自对本质的把握。" },
+  { name:"英招", pinyin:"yīng zhāo", origin:"《西山经》载，英招形似马身而人面，身覆虎纹，背生鸟翼，立于山野之间，守护天地秩序。", situation:"你正带着某种使命感在多地行动，为重要的目标持续付出时间与精力。", trait:"象征勤勉的巡视精神、强大的执行力，以及忠实可靠的园丁精神。", guidance:"你的行动并非无意义的奔波。在不断前行与探索中，经验与成长正悄然沉淀。" },
+  { name:"夔牛", pinyin:"kuí niú", origin:"《大荒东经》载，夔牛形似无角之牛，通体苍色，独足立于水间，声若雷鸣，出则风雨随之而动。", situation:"你正积蓄着深厚的力量，等待在关键时刻以清晰而有力的方式表达立场。", trait:"象征着雷霆万钧的爆发力、强大的威慑力，以及足以影响局势的声音与存在感。", guidance:"沉稳如山，潜力如雷。待时而发，一声震响，足以改变格局。" },
+  { name:"飞廉", pinyin:"fēi lián", origin:"古籍载其为风神，鹿身，头如雀，生角而尾似蛇，身覆豹纹。", situation:"你渴望自由，倾向在多样的关系与场景中保持自由的行动方式。", trait:"代表着风的无形、极速的传播力与无法被捕捉的自由灵魂。", guidance:"保持内在的轻盈与流动，在广阔的天地间自在前行。风行无形，去处皆是可能。" },
+  { name:"屏蓬", pinyin:"píng péng", origin:"《大荒北经》载：有兽，左右有首，名曰屏蓬。", situation:"你可能正面临内在的分歧，两种不同的思考方式在你心中同时存在。", trait:"象征着对立、矛盾的双轨思维与原地踏步的困境。", guidance:"允许两种声音共存，减少内耗，在接纳与理解中前行。真正的成长，源于与内心的和解。" },
+  { name:"窫窳", pinyin:"yà yǔ", origin:"《海内南经》载，窫窳曾为天神，后遭变故，龙首沉于弱水之中，形象带有悲剧性的转化意味。", situation:"你可能经历了一场极其痛苦的转变，内心充满了对世界的不信任。", trait:"象征痛苦中的成长、深层情绪的沉淀，以及在脆弱的状态下依然保持坚强。", guidance:"试着从过往的沉重中慢慢走出，让时间与自我理解带来重建的可能。温柔地对待内心的伤痕，向前，但不必急于抵达。" },
+  { name:"钦原", pinyin:"qīn yuán", origin:"《西山经》载，钦原形似蜂，体大如鸳鸯，若刺鸟兽则亡，触及草木亦枯", situation:"你拥有极具杀伤力的言辞或手段，在某些时刻显得难以被轻易靠近。", trait:"象征着致命的一击、绝对的防御与令人敬畏的边界感。", guidance:"你的表达与行动中既有边界的清晰，也有内在的力量。锋芒虽锐，却可被善用，请谨慎使用你的“毒刺”，将其留给真正的敌人。" },
+  { name:"旋龟", pinyin:"xuán guī", origin:"《南山经》载：其状如龟而鸟首虺尾，其名曰旋龟，佩之可安神静心。", situation:"你正把头缩进壳里，专注于自我保护并屏蔽掉外界杂乱的声音。", trait:"代表着坚不可摧的防御力、深沉的耐性与不被流言蜚语干扰的清聪。", guidance:"保持你的专注，任凭外界喧嚣，你自安如磐石。你自己的节奏，就是最稳妥、最可靠的前行方式。" },
+  { name:"朏朏", pinyin:"fěi fěi", origin:"《中山经》载：其状如狸，而白尾，有鬣，名曰朏朏，养之可安神解忧。", situation:"你更容易感知他人的情绪，也愿意在关系中承担安抚与陪伴的角色。", trait:"象征细腻的共情能力、柔和的陪伴方式，以及化解情绪紧张感的温柔之力。", guidance:"温柔既是一种力量，也是一种智慧。它让理解先于对抗，让接纳生长在情绪之上。你所拥有的，便是这种为人们带去幸福的爱之力。去抱抱那些受伤的人吧，你的存在便是这个世界的慰藉。" },
+  { name:"狻猊", pinyin:"suān ní", origin:"典籍载其形如狮，喜烟好坐，常伏于香炉之上。", situation:"你正处于一种极度静谧、喜欢冥想的超然状态。", trait:"象征在威严中保持沉静，对精神世界的专注，以及从平和中吸收外界能量的能力。", guidance:"享受你当下的宁静与冥想。在平和的呼吸间，你会悟出那些匆匆奔波者无法看到的真理。" },
+  { name:"狴犴", pinyin:"bì àn", origin:"典籍载狴犴形似虎，性好审判，威力非凡，常立于狱门之上。", situation:"你对公平与正义有着极高的敏感度，正试图在某件事情中主持公道。", trait:"象征着铁面无私的公正、明辨是非的洞察力与震慑邪佞的威严。", guidance:"坚守你心中的那杆秤。在纷乱之中，你的公正与威严，将为混乱的局面带来稳定的秩序。" },
+  { name:"蒲牢", pinyin:"pú láo", origin:"典籍载其形似盘曲的龙，平生好鸣，遇击则大声吼叫。", situation:"你可能正处在想要表达自我、希望被听见的状态，内心有较强的发声需求。", trait:"象征强烈的传播张力、敏锐的外界感知，以及广泛的影响力。", guidance:"勇敢喊出你的诉求。你的表达，可能在不经意间积累声望与影响，带来向上生长的力量。" },
+  { name:"霸下", pinyin:"bà xià", origin:"典籍载其形似龟，平生好负重，力大无穷。", situation:"你正默默背负着极其沉重的压力、责任或历史遗留问题，艰难前行。", trait:"象征深厚的耐性、强大的承载能力，以及沉默而坚实的担当。", guidance:"致敬你的坚韧。你所背负的重量，最终将成为彰显你功绩的最坚实的石碑。" },
+  { name:"螭吻", pinyin:"chī wěn", origin:"典籍载其形体似兽，习性好张望，多饰于屋脊，可避火灾。", situation:"你站在高处俯瞰，对未知的风险保持警惕，准备吞噬掉任何危险的火苗。", trait:"代表着高瞻远瞩的视野、守护性的预警能力，以及化解隐患的稳重气质。", guidance:"保持你的前瞻与警觉，洞察可能的变化，你不仅能看到远方的风景，更能为他人扑灭潜在的危机。" },
+  { name:"嘲风", pinyin:"cháo fēng", origin:"典籍载其平生好险又好望，常饰于殿角。", situation:"你内心充满了对冒险的渴望，喜欢挑战极限与探索未知的边界。", trait:"象征探索未知的勇气、突破常规的行动张力，以及在高处守望的孤高气质。", guidance:"去冒险吧。在风口浪尖与悬崖峭壁之上，那里或许没有安稳，却有属于你的自由与真实。" },
+  { name:"睚眦", pinyin:"yá zì", origin:"典籍载睚眦生性好争斗，常刻饰于刀兵之上。", situation:"你可能正处于需要明确立场、守护原则或面对冲突的状态。", trait:"代表着快意恩仇的决绝、果断的行动力与寸步不让的坚定锋芒。", guidance:"你的锋利能斩断一切乱麻，但请注意控制你的戾气。恩怨分明是好事，勿伤及无辜。" },
+  { name:"椒图", pinyin:"jiāo tú", origin:"典籍载椒图形似螺蚌，性喜安静与守护，常饰于门扉之上。", situation:"你极其看重个人隐私与边界感，对外界的接触保持谨慎的态度。", trait:"象征对安全感的深层追求、清晰的边界意识，以及内在的防护性。", guidance:"安全感本身值得被珍视。让内心在安静中停留一会儿，当你准备好时，再敞开心扉，世界也会以更温柔的方式向你靠近。" },
+  { name:"囚牛", pinyin:"qiú niú", origin:"典籍载其平生爱好音乐，常蹲立于琴头。", situation:"你更容易在艺术、音乐或细腻的感官体验中，获得精神上的安定与满足。", trait:"代表着极高的艺术修养、对美学的极致追求与高雅的性情。", guidance:"艺术并非是逃离现实的方式，而是帮助你在喧嚣中保持内在的清醒与纯粹，在细腻之处理解世界的节奏。" },
+  { name:"姑获鸟", pinyin:"gū huò niǎo", origin:"古籍载其为夜行之鸟，披羽为鸟，解羽为人，常在夜色之间往来。", situation:"最近的你可能变得更加感性，夜深时情绪会悄然涌动。", trait:"象征着敏锐的直觉与敏感的情绪，身份的转换以及某种执念。", guidance:"看清你执念的根源。在夜晚展翅时，让情绪自由停留片刻。等到黎明到来，再打起精神，好好生活。" },
+  { name:"精卫", pinyin:"jīng wèi", origin:"《北山经》载：溺而不返，故为精卫，常衔西山之木石，以堙于东海。", situation:"你可能正在坚持一件极其艰难的事情，即使前路漫长，也依然没有放弃。", trait:"象征坚定不移的意志、对理想的执着守望，以及面对巨大困难仍不退缩的勇气。", guidance:"不必独自承担全部重量。慢慢来，一点一点向前，哪怕脚步微小，你的努力本身就已经很有意义。" },
+  { name:"刑天", pinyin:"xíng tiān", origin:"《海外西经》载，刑天与天帝争战，头颅被断，仍以乳为目、以脐为口，持盾挥斧而舞。", situation:"你可能经历过挫折、冲突或不公，但依然选择继续向前。", trait:"象征坚韧的战斗精神、强烈的内在意志，以及不向命运低头的生命韧劲。", guidance:"哪怕经历过沉重的时刻，也不必怀疑自己的力量。允许自己带着伤痕继续前行，你依然可以找到属于自己的节奏与方向。" },
+  { name:"夸父", pinyin:"kuā fù", origin:"《海外北经》载，夸父逐日而行，终饮渭河而不足，弃杖化为桃林。", situation:"你在追逐一个极其遥远且宏大的理想，甚至为此燃烧着自己的生命。", trait:"象征追逐理想的热情、坚定的行动意志，以及带有悲壮色彩的英雄精神。", guidance:"前行本身，就蕴含着意义。你所投入的热情与坚持，或许不会立即抵达终点，但会在时间中沉淀，成为更广阔世界的一部分。" },
+  { name:"应龙", pinyin:"yìng lóng", origin:"《大荒东经》载，应龙居南极，曾平息动荡，象征战斗与守护并存的龙族力量。", situation:"你在团队中常扮演关键角色，习惯在重要时刻站出来解决问题，肩负较重的责任。", trait:"象征着绝顶的武力、带来甘霖的拯救者与功成身退的隐士。", guidance:"蛟龙本非池中之物。沉潜并不意味着停滞，力量只是在等待更合适的风与云。当时机到来，你依然能够抵达属于自己的天空。" },
+  { name:"当康", pinyin:"dāng kāng", origin:"《东次四经》记载，当康形似小猪，生有利牙，出现时象征五谷丰登、天下丰饶。", situation:"你可能正经历一段持续努力后的回报期，生活与付出正在慢慢积累成果。", trait:"象征朴素而充实的丰饶感、稳定的收获状态，以及温和的吉祥气息。", guidance:"准备好迎接你的粮仓吧。你的实在与勤恳，即将为你换来最丰厚的回报。" },
+  { name:"䑏疏", pinyin:"huān shū", origin:"《北山经》记载，䑏疏形似独角马，传说具有避火降温之力。", situation:"你擅长在情绪紧张或冲突环境中保持清醒与沉稳。", trait:"象征清冷的理性气质、缓和情绪的稳定力量，以及不被狂热裹挟的判断能力。", guidance:"当周围的情绪像烈火般升腾时，保持你的清醒与平静。以从容的方式思考与回应，或许就能带来安定的力量。" },
+  { name:"孟极", pinyin:"mèng jí", origin:"《北山经》记载，孟极形似豹，白身黑纹，善于潜伏。", situation:"你更倾向在安静的位置观察与思考，习惯在不被打扰的状态中寻找最佳行动时机。", trait:"象征卓越的耐心、隐秘的行动方式，以及具备一击制胜潜力的沉潜型力量。", guidance:"保持你的冷静与敏锐。真正有力量的判断，往往来自沉静的观察与思考，你拥有看清表象的能力，你的沉默里蕴藏着改变格局的力量。" },
+  { name:"幽頞", pinyin:"yōu è", origin:"《北山经》载：有兽焉，其状如禺而文身，善笑，见人则卧，名曰幽頞。", situation:"你常用自嘲或幽默的方式化解尴尬或敌意，外表温和随性，内心却保持清醒与冷静。", trait:"象征看透但不说破的智慧、以柔克刚的生存方式，以及冷静的观察力。", guidance:"有些答案不需要说破。让笑意留在表面，清醒自留心间。" },
+  { name:"诸犍", pinyin:"zhū jiān", origin:"《北山经》记载，此兽是人面豹身，牛耳一目，有长尾，能发巨声。行走时衔着尾巴，休息时盘着尾巴。", situation:"你习惯独来独往，将注意力集中于最重要的目标。你的专注与孤独，让周遭一切喧嚣难以触及你。", trait:"象征无可匹敌的专注力、孤独的力量，以及足以震慑世人的气场。", guidance:"瞄准你的目标，释放属于你的声音。你的专注力少有人能及，独行有时正是让你不被干扰、走得更远的方式。" },
+  { name:"獙獙", pinyin:"bì bì", origin:"《东山经》载：有兽焉，其状如狐而有翼，其音如雁鸣，其名曰獙獙，见则天下大旱。", situation:"你在群体中往往具有较强的存在感，思考与行动都带有推进性，容易在环境中留下属于自己的痕迹。", trait:"象征敏捷的洞察能力、灵活的行动方式，以及能够找寻机会与调动资源的能力。", guidance:"你的行动与想法，总能在环境中激起涟漪。你不需要刻意表现自己，按照你的想法去行动，时间久了，周围的人自然会感受到你的影响。" },
+  { name:"陵鱼", pinyin:"líng yú", origin:"《海内北经》载：陵鱼人面，手足，鱼身，在海中。", situation:"你正处在两种世界或状态之间——理智与情感、现实与幻想——努力寻找自己的平衡点。", trait:"代表跨界适应力、神秘感，以及在未知中探索的勇气。", guidance:"不必强迫自己只属于一种状态。感性与理性都可以存在，慢慢找到让自己舒服的方式，生活也会变得更自然。" },
+  { name:"驺吾", pinyin:"zōu wú", origin:"《海内北经》载，林氏国有珍兽驺吾，体型如虎，五彩斑斓，传说能日行千里。", situation:"你正以惊人的节奏和活力前行，潜能被完全激发，速度和效率都达到了顶峰。", trait:"象征卓越的潜力与非凡的速度。", guidance:"尽情释放你的潜力与才华。你就是那个能够穿越平凡、创造奇迹的存在。" },
+  { name:"辟邪", pinyin:"bì xié", origin:"古代神话传说中的神兽，似狮而带翼，能拔除不祥，镇宅辟邪。", situation:"你的气场全开，正在积极清理生活中的负能量或一切不洁之物。", trait:"代表着绝对的刚正、驱除邪祟的净力与守护正道的威严凛然。", guidance:"坚定地划清界限，去除那些消耗你能量的人和事。你有能力让不安与杂乱远离自己，生活的方向会牢牢掌握在你的手中。" },
+  { name:"貔貅", pinyin:"pí xiū", origin:"古籍载貔貅为瑞兽，形似狮而生翼，传说以吞纳之姿守护财富与福气。", situation:"你正处于疯狂积累财富、知识或人脉的阶段，只进不出，稳如泰山。", trait:"象征着极致的聚财能力、强大的聚合能力、以及稳定的资源守护气质。", guidance:"这是一个适合积累的阶段。让有价值的经验、知识与机会慢慢沉淀，它们会在未来成为支撑你的力量。" }
+];
+
+const animalQ =[
+  [[12, 27, 40, 64],[6, 21, 30, 48],[4, 5, 42, 10],[13, 22, 62, 23]],
+  [[39, 40, 56, 35],[30, 48, 52, 6],[1, 15, 60, 25],[3, 36, 47, 65]],
+  [[2, 12, 26, 40],[5, 18, 51, 6],[8, 11, 37, 60],[3, 22, 54, 69]],
+  [[8, 28, 64, 4],[17, 32, 65, 45],[40, 67, 10, 2],[36, 59, 16, 47]],
+  [[3, 14, 46, 55],[8, 36, 47, 59],[0, 8, 16, 68],[18, 39, 49, 64]],
+  [[15, 58, 61, 23],[3, 36, 52, 64],[0, 11, 25, 63],[4, 18, 39, 51]],
+  [[13, 17, 46, 55],[25, 45, 68, 60], [8, 28, 64, 11],[12, 22, 43, 62]],
+  [[23, 60, 50, 1],[0, 16, 54, 30],[27, 46, 53, 8], [4, 21, 66, 32]],
+  [[3, 46, 55, 66],[4, 18, 39, 51], [1, 10, 26, 60],[9, 14, 25, 58]],
+  [[12, 40, 10, 67], [30, 48, 54, 52],[0, 8, 16, 63],[3, 36, 47, 62]],
+  [[10, 40, 67, 12],[22, 43, 62, 13],[30, 48, 52, 21],[14, 17, 46, 55]],
+  [[2, 12, 40, 26],[30, 36, 48, 54],[8, 11, 68, 0],[13, 22, 60, 23]],
+  [[12, 40, 67, 10],[36, 48, 52, 54],[0, 8, 16, 64],[3, 26, 47, 68]]
+];
+
+const app = document.getElementById('app');
+let lotResult = null;
+let currentQ = 0;
+let userAnswers =[];
+
+function renderHome() {
+  app.innerHTML = `
+    <div class="home-title">探索你的本命上古神兽</div>
+    <div class="home-sub">上古有灵，栖于人心。<br>翻开东方神话长卷，唤醒你灵魂深处的上古血脉。</div>
+    <button class="btn-outline" onclick="renderDivinationStage()">开启旅程</button>
+  `;
+}
+
+function renderDivinationStage() {
+  app.innerHTML = `
+    <div class="divination-sub-title">请诚心默念，摇动签筒</div>
+    
+    <div class="cylinder-container" id="cylinder-container" onclick="shakeCylinder()">
+      <svg class="sticks-svg" viewBox="0 0 60 160">
+        <line x1="15" y1="10" x2="20" y2="160" stroke="#d4c1a0" stroke-width="4" stroke-linecap="round"/>
+        <line x1="25" y1="5" x2="25" y2="160" stroke="#e0cdad" stroke-width="4" stroke-linecap="round"/>
+        <line x1="35" y1="15" x2="30" y2="160" stroke="#c2af8e" stroke-width="4" stroke-linecap="round"/>
+        <line x1="45" y1="8" x2="40" y2="160" stroke="#d4c1a0" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+      <svg class="cylinder-svg" viewBox="0 0 100 150">
+        <rect x="20" y="20" width="60" height="120" rx="8" fill="#a47754" stroke="#5a3d24" stroke-width="2"/>
+        <ellipse cx="50" cy="20" rx="30" ry="12" fill="#7a5538" stroke="#5a3d24" stroke-width="2"/>
+        <ellipse cx="50" cy="140" rx="30" ry="10" fill="#8c6444" stroke="#5a3d24" stroke-width="2"/>
+        <line x1="40" y1="32" x2="40" y2="140" stroke="#8c6444" stroke-width="1"/>
+        <line x1="60" y1="32" x2="60" y2="140" stroke="#8c6444" stroke-width="1"/>
+        <circle cx="50" cy="80" r="15" fill="none" stroke="#e8d9bd" stroke-width="1.5" opacity="0.6"/>
+        <path d="M50 65 A15 15 0 0 1 50 95 A7.5 7.5 0 0 0 50 80 A7.5 7.5 0 0 1 50 65 Z" fill="#e8d9bd" opacity="0.6"/>
+      </svg>
+    </div>
+
+    <div id="drawn-slip-container" class="drawn-slip-container">
+      <div class="bamboo-slip">
+        <div class="slip-text-num" id="slip-num"></div>
+        <div class="slip-text-grade" id="slip-grade"></div>
+      </div>
+      <div class="lot-explanation" id="lot-text"></div>
+      <div class="lot-desc-text" id="lot-desc"></div>
+    </div>
+
+    <button class="btn-outline" id="shake-btn" onclick="shakeCylinder()">诚心摇签</button>
+    
+    <div id="continue-container" class="continue-container">
+      <button class="btn-outline" style="margin-top:20px;" onclick="startQuiz()">带着指引，继续前行</button>
+    </div>
+  `;
+}
+
+window.shakeCylinder = function() {
+  if(lotResult !== null) return; 
+  
+  const container = document.getElementById('cylinder-container');
+  const btn = document.getElementById('shake-btn');
+  
+  btn.style.display = 'none';
+  container.classList.add('shaking');
+  
+  setTimeout(() => {
+    container.classList.remove('shaking');
+    container.style.display = 'none'; 
+    document.querySelector('.divination-sub-title').innerText = "关帝灵签 赐予指引";
+    
+    let randomIndex = Math.floor(Math.random() * 100);
+    lotResult = fullGuandiLots[randomIndex];
+    
+    let slipNumStr = "第" +["零","一","二","三","四","五","六","七","八","九","十"][Math.floor(lotResult.num/10)] + 
+                     (lotResult.num%10===0 ? "十" :["","一","二","三","四","五","六","七","八","九"][lotResult.num%10]) + "签";
+    if(lotResult.num === 100) slipNumStr = "第一百签";
+    if(lotResult.num < 10) slipNumStr = "第" +["","一","二","三","四","五","六","七","八","九"][lotResult.num] + "签";
+    if(lotResult.num >= 10 && lotResult.num < 20) slipNumStr = "第十" + (lotResult.num%10===0?"":["","一","二","三","四","五","六","七","八","九"][lotResult.num%10]) + "签";
+
+    document.getElementById('slip-num').innerText = slipNumStr;
+    document.getElementById('slip-grade').innerText = lotResult.grade;
+    document.getElementById('lot-text').innerHTML = `<strong>【签文】</strong> ${lotResult.poem}`;
+    document.getElementById('lot-desc').innerText = lotResult.desc;
+    
+    document.getElementById('drawn-slip-container').style.display = 'flex';
+    
+    setTimeout(() => {
+      document.getElementById('continue-container').classList.add('visible');
+    }, 1200);
+    
+  }, 1200); 
+}
+
+window.startQuiz = function() {
+  currentQ = 0;
+  userAnswers =[];
+  renderQuiz();
+}
+
+function renderQuiz() {
+  if (currentQ >= questions.length) {
+    generateReport();
+    return;
+  }
+  
+  const q = questions[currentQ];
+  app.innerHTML = `
+    <div class="quiz-container">
+      <div class="page-num">${currentQ + 1} / 13</div>
+      <div class="question-text">${q.q}</div>
+      <div class="options-list">
+        ${q.o.map((opt, i) => `
+          <div class="option-item" onclick="selectOption(this, ${i})">${opt}</div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+window.selectOption = function(el, optIndex) {
+  if (el.parentNode.querySelector('.selected')) return;
+  
+  el.classList.add('selected');
+  userAnswers.push(optIndex);
+  
+  setTimeout(() => {
+    currentQ++;
+    renderQuiz();
+  }, 450);
+}
+
+function generateReport() {
+  // 多项式素数哈希算法 - 保证改一题必出不同神兽
+  let hash = 0;
+  const primes =[11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59];
+  
+  for(let i = 0; i < 13; i++) {
+    hash += (userAnswers[i] + 1) * primes[i];
+    hash = (hash * 31) % 9999991; 
+  }
+  
+  let finalAnimalIdx = hash % 70;
+  let animal = animals[finalAnimalIdx];
+
+  app.innerHTML = `
+    <div class="report-card">
+      <div class="report-sub">你的本命上古神兽</div>
+
+      <div class="report-title">${animal.name}</div>
+      <div class="beast-pinyin">${animal.pinyin}</div>
+      
+      <div class="report-lot">
+        <span>灵签赐福：第${lotResult.num}签[${lotResult.grade}]</span>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="section-title">典籍记载</div>
+      <div class="section-content">
+        ${animal.origin}
+      </div>
+
+      <div class="section-title">当下境遇</div>
+      <div class="section-content">
+        【灵签指引】：${lotResult.desc}<br><br>
+        【神兽共鸣】：${animal.situation}
+      </div>
+
+      <div class="section-title">灵魂特质</div>
+      <div class="section-content">
+        你的本命神兽是<strong>【${animal.name}】</strong>。${animal.trait}
+      </div>
+
+      <div class="section-title">神兽指引</div>
+      <div class="section-content">
+        ${animal.guidance}
+      </div>
+
+      <button class="btn-outline" onclick="location.reload()">重新探索</button>
+    </div>
+  `;
+}
+
+renderHome();
+
+</script>
+</body>
+</html>
